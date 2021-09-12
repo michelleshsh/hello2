@@ -31,6 +31,7 @@ app.post('/actors/:id/movies', actors.addMovie);
 app.delete('/actors/:id', actors.deleteOne);
 app.delete('/actorsandmovie/:id',actors.deleteOneAndMovies)
 app.delete('/actors/:aId/:mId', actors.removeMovie);
+app.get('/averageActors', actors.averageActors); //fix up
 
 //Movie RESTFul  endpoints
 app.get('/movies', movies.getAll);
@@ -41,5 +42,6 @@ app.put('/movies/:id', movies.updateOne);
 app.post('/movies', movies.createOne);
 app.delete('/movies/:id', movies.deleteOne);
 app.delete('/movies/:mId/:aId', movies.removeActor);
+
 app.delete('/movies', movies.removeMovieBtYears);
 app.post('/movies/:id/actors', movies.addActor);

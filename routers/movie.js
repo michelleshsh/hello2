@@ -5,8 +5,8 @@ const mongoose = require('mongoose');
 module.exports = {
 
     getAll: function (req, res) {
-        Movie.find({}).populate('actors').exec(function (err, movies) {
-            if (err) return res.status(400).json(err);
+        Movie.find({}).populate('actors',"-__v").select('-__v').exec(function (err, movies) {
+            if (err) return res.status(404).json(err);
             res.json(movies);
         });
     },
@@ -19,6 +19,7 @@ module.exports = {
               ]
             }, function (err, movies) {
             if (err) return res.status(400).json(err);
+            if (!movies) return res.status(404).json();
             res.json(movies);
         });
     },
@@ -73,13 +74,15 @@ module.exports = {
 
         Movie.findByIdAndUpdate(req.params.mId, 
             { $pull: { actors: req.params.aId } }, 
-             function (err, doc) {
-                                if (!err) {
-                                    res.status(200).send()
-                                } else {
-                                    res.render('error', { error: err })
-                                }
-                            })
+             function (err, movie) {
+                if (!err) {
+                    if (!movie){
+                        res.status(404).send("not document")
+                    }
+                    res.status(200).send(movie)
+                } else {
+                    res.status(400).send(err)
+                }})
         },
 
     addActor: function (req, res) {

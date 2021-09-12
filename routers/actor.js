@@ -6,7 +6,7 @@ const Movie = require('../models/movie');
 module.exports = {
 
     getAll: function (req, res) {
-        Actor.find({}).populate('movies').exec(function (err, actors) {
+        Actor.find({}).populate('movies',"-__v").select('-__v').exec(function (err, actors) {
             if (err) {
                 return res.status(404).json(err);
             } else {
@@ -59,15 +59,16 @@ module.exports = {
     },
 
     deleteOneAndMovies: function (req, res) {
-        Actor.findOneAndRemove({ _id: req.params.id }, function(err,docs){
-            if (err) {
-                console.log(err)}
+        Actor.findOneAndRemove({ _id: req.params.id }, function(err,actor){
+            if (err) return res.status(400).json(err);
+            if (!actor) return res.status(404).json("Actor not found");
             else{
-                Movie.deleteMany({_id: { $in: docs.movies}}, function (err){
-                    if (err) return console.log(err);
+                Movie.deleteMany({_id: { $in: actor.movies}}, function (err, movie){
+                    if (err) return res.status(400).json(err);
+                    if (!movie) return res.status(404).json("Movie not found");
                 })
             };
-            res.json();
+            res.json(actor);
         }
         )},      
     
@@ -92,16 +93,29 @@ module.exports = {
     },
 
     removeMovie: function (req, res) {
-
         Actor.findByIdAndUpdate(req.params.aId, 
             { $pull: { movies: req.params.mId } }, 
-             function (err, doc) {
+             function (err, actor) {
                                 if (!err) {
-                                    res.status(200).send()
+                                    if (!actor){
+                                        res.status(404).send("Actor doesnt exist")
+                                    }
+                                    res.status(200).send("Actor and Movies successfully deleted")
                                 } else {
-                                    res.render('error', { error: err })
+                                    res.status(400).send(err)
                                 }
                             })
-        }
+                        },
+    
+    averageActors: function (req,res) {
+
+        Actor.aggregate([{ $unwind: '$movies' },{ $project: { movies: 1, } },{ $group: { _id: null, avgMovies: { $avg: "$movies._id" }}}], function(err,doc){
+            if (!err){
+                res.status(200).json(doc)
+            } else {
+                res.status(400).json(err)
+            }
+        })
+    }
     
 };
